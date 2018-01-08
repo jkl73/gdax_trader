@@ -3,7 +3,6 @@ from requests.auth import AuthBase
 from decimal import Decimal
 
 api_url = 'https://api.gdax.com/'
-gauth = 'x'
 
 ###########################################
 # Create custom authentication for Exchange
@@ -23,8 +22,6 @@ class CoinbaseExchangeAuth(AuthBase):
 
         message = timestamp + request.method + request.path_url + (request.body or '')
 
-        print ("----" + message)
-
         hmac_key = base64.b64decode(self.secret_key)
         signature = hmac.new(hmac_key, message, hashlib.sha256)
         signature_b64 = signature.digest().encode('base64').rstrip('\n')
@@ -40,10 +37,11 @@ class CoinbaseExchangeAuth(AuthBase):
             'CB-ACCESS-PASSPHRASE': self.passphrase,
             'Content-Type': 'application/json'
         })
+        # auth
         return request
 
 ###
-### OPS no manipulation
+### OPS no manipulation (get ops)
 ###
 
 #####################
@@ -58,16 +56,16 @@ def getAccount(auth):
 #####################
 # list all orders
 #####################
-def listOrders(status, product_id):
-    r = requests.get(api_url + 'orders?' + 'status=' + status + '&product_id=' + product_id, auth=gauth)
+def listOrders(status, product_id, auth):
+    r = requests.get(api_url + 'orders?' + 'status=' + status + '&product_id=' + product_id, auth=auth)
     print(r.json())
     return r
 
 #####################
 # get latest quote
 #####################
-def bidsAsksDiff(product_id):
-    r = requests.get(api_url + 'products/' + product_id + '/book?level=2', auth=gauth)
+def bidsAsksDiff(product_id, auth):
+    r = requests.get(api_url + 'products/' + product_id + '/book?level=2', auth=auth)
     
     bidsSize = 0
     asksSize = 0
@@ -83,21 +81,21 @@ def bidsAsksDiff(product_id):
     print("askSize: " + str(asksSize))
 
 ##############################
-# latest matched trading price
+# latest matched trading price, no auth required
 ##############################
 def getLatestPrice(product_id):
     r = requests.get(api_url + 'products/' + product_id + '/ticker')
     return r
 
 ###
-### OPS including manipulation ###########################################################################
+### OPS including manipulation (put/delete ops)
 ###
 
 #####################
 # EMERGENCY: cancel all orders
 #####################
-def cancelAllOrders(product_id):
-    r = requests.delete(api_url + 'orders?' + 'product_id=' + product_id, auth=gauth)
+def cancelAllOrders(product_id, auth):
+    r = requests.delete(api_url + 'orders?' + 'product_id=' + product_id, auth=auth)
     print(r.json())
     return r
 
@@ -105,7 +103,7 @@ def cancelAllOrders(product_id):
 # place a limit order
 # time_in_force: {GTC, GTT, IOC, FOK}
 #####################
-def placeLimit(type, size, price, side, time_in_force, post_only, product_id):
+def placeLimit(type, size, price, side, time_in_force, post_only, product_id, auth):
     # Place an order
     order = {
         'size': size,
@@ -115,6 +113,6 @@ def placeLimit(type, size, price, side, time_in_force, post_only, product_id):
         'post_only': post_only,
         'product_id': product_id,
     }
-    r = requests.post(api_url + 'orders', json=order, auth=gauth)
+    r = requests.post(api_url + 'orders', json=order, auth=auth)
     print r.json()
     return r

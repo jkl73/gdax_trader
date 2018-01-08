@@ -8,57 +8,87 @@
 
 import json, hmac, hashlib, time, requests, base64
 import datetime
+import sys
+import argparse
+
+from enum import Enum
+
 import gdax_comm
 from decimal import Decimal
 
-# MAIN START
-# AUTH Head Info
-with open('config.json') as api_secret:
-    api_credential = json.load(api_secret)
+class ProductId(Enum):
+    ETHUSD = 'ETH-USD'
+    BTCUSD = 'BTC-USD'
 
-API_KEY = api_credential['api_key']
-API_SECRET = api_credential['api_secret']
-API_PASS = api_credential['api_pass']
-auth = gdax_comm.CoinbaseExchangeAuth(API_KEY, API_SECRET, API_PASS)
+    def __str__(self):
+        return self.value
 
-# Get accounts
-r = gdax_comm.getAccount(auth)
-print ("* * * * * *")
-print ("* Available Funds: " + r.json()[0]['available'])
-print ("* Total Balance: " + r.json()[0]['balance'])
-print ("* * * * * *")
+def main(argv):
 
-# Constants
-mainLoopPeroid = 1
+    # Get all arugments
+    parser = argparse.ArgumentParser(description='GDAX Auto Trader')
+    parser.add_argument('-p', help='product_id (\'ETH-USD\', \'BTC-USD\'', choices=list(ProductId), type=ProductId)
+    args = parser.parse_args()
 
-# Vars
-prevPrc = Decimal(gdax_comm.getLatestPrice('ETH-USD').json()['price'])
+    # Define product_id
+    product_id = str(args.p)
 
-# Main Loop
-while True:
-    time.sleep(mainLoopPeroid)
+    # MAIN START
+    # AUTH Head Info
+    # Read Secrets from config.json
+    with open('config.json') as api_secret:
+        api_credential = json.load(api_secret)
 
-    print("@" + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-    gdax_comm.placeLimit('limit', 0.01, 10, 'buy', 'GTC', True, 'ETH-USD')
+    API_KEY = api_credential['api_key']
+    API_SECRET = api_credential['api_secret']
+    API_PASS = api_credential['api_pass']
+    auth = gdax_comm.CoinbaseExchangeAuth(API_KEY, API_SECRET, API_PASS)
 
-    curPrc = Decimal(gdax_comm.getLatestPrice('ETH-USD').json()['price'])
+    # Get accounts
+    r = gdax_comm.getAccount(auth)
+    print ("* * * * * *")
+    print ("* Available Funds: " + r.json()[0]['available'])
+    print ("* Total Balance: " + r.json()[0]['balance'])
+    print ("* * * * * *")
 
-    print curPrc
+    # Constants
+    mainLoopPeroid = 1
 
-    if (prevPrc > curPrc):
-        print "vvv " + str(prevPrc - curPrc)
-        prevPrc = curPrc
-    elif (prevPrc < curPrc):
-        print "^^^ " + str(curPrc - prevPrc)
-        prevPrc = curPrc
-    else:
-        print "---"
+    # Vars
+    prevPrc = Decimal(gdax_comm.getLatestPrice('ETH-USD').json()['price'])
 
-    #listOrders('open', 'ETH-USD')
+    # Main Loop
+    while True:
+        time.sleep(mainLoopPeroid)
 
-    #cancelAllOrders('ETH-USD')
+        print("@" + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
+        #gdax_comm.placeLimit('limit', 0.01, 10, 'buy', 'GTC', True, 'ETH-USD')
 
-    gdax_comm.bidsAsksDiff('ETH-USD')
+        curPrc = Decimal(gdax_comm.getLatestPrice('ETH-USD').json()['price'])
 
-    print "-----------------------------------------------"
+        print curPrc
+
+        if (prevPrc > curPrc):
+            print "vvv " + str(prevPrc - curPrc)
+            prevPrc = curPrc
+        elif (prevPrc < curPrc):
+            print "^^^ " + str(curPrc - prevPrc)
+            prevPrc = curPrc
+        else:
+            print "---"
+
+        #listOrders('open', 'ETH-USD')
+
+        #cancelAllOrders('ETH-USD')
+
+        #gdax_comm.bidsAsksDiff('ETH-USD')
+
+        print "-----------------------------------------------"
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
+
+
+
 
