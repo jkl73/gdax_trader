@@ -27,7 +27,7 @@ def main(argv):
 
     # Get all arugments
     parser = argparse.ArgumentParser(description='GDAX Auto Trader')
-    parser.add_argument('-p', help='product_id (\'ETH-USD\', \'BTC-USD\'', choices=list(ProductId), type=ProductId)
+    parser.add_argument('-p', help='product_id (\'ETH-USD\', \'BTC-USD\'', choices=list(ProductId), type=ProductId, required=True)
     args = parser.parse_args()
 
     # Define product_id
@@ -55,7 +55,7 @@ def main(argv):
     mainLoopPeroid = 1
 
     # Vars
-    prevPrc = Decimal(gdax_comm.getLatestPrice('ETH-USD').json()['price'])
+    prevPrc = Decimal(gdax_comm.getLatestPrice(product_id).json()['price'])
 
     # Main Loop
     while True:
@@ -64,7 +64,7 @@ def main(argv):
         print("@" + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         #gdax_comm.placeLimit('limit', 0.01, 10, 'buy', 'GTC', True, 'ETH-USD')
 
-        curPrc = Decimal(gdax_comm.getLatestPrice('ETH-USD').json()['price'])
+        curPrc = Decimal(gdax_comm.getLatestPrice(product_id).json()['price'])
 
         print curPrc
 

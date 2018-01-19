@@ -28,8 +28,6 @@ class CoinbaseExchangeAuth(AuthBase):
 
         print(signature_b64)
 
-        print("asdfasdf" + message)
-
         request.headers.update({
             'CB-ACCESS-SIGN': signature_b64,
             'CB-ACCESS-TIMESTAMP': timestamp,
